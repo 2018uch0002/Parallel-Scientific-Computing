@@ -19,10 +19,10 @@ all: heat1dImp
 CC = gcc
 CXX = g++
 
-CCFLAGS= -fPIC -03 -1$ (APlusPlus)/include -I../../include
+CCFLAGS= -fPIC -O3 -I$(APlusPlus)/include -I../../include
 
 # List of libraries for A++
-AppLibraries = -Wl,-rpath, $(APlusPlus)/lib -L$ (APlusPlus)/lib -1App -1App_static
+AppLibraries = -Wl,-rpath,$(APlusPlus)/lib -L$(APlusPlus)/lib -lApp -lApp_static
 
 # List of all libraries
 LIBS = $(AppLibraries)
@@ -38,4 +38,6 @@ heat1dImpFiles = heat1dImp.o tridiagonal.o
 heat1dImp: $(heat1dImpFiles)
 	$(CXX) $(CCFLAGS) -o $@ $(heat1dImpFiles) $(LIBS)
 
-clean:; rm *.o
+clean:
+	rm *.o
+
