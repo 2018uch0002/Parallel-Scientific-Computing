@@ -1,4 +1,4 @@
 *.o
 ./*
 .vscode
-heat1dImp
+Assignment-03/heat1d_code/heat1dImp
