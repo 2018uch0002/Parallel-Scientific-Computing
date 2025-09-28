@@ -1,0 +1,4 @@
+*.o
+./*
+.vscode
+Assignment-03/heat1d_code/heat1dImp
