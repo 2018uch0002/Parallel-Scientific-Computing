@@ -61,7 +61,7 @@ return 0;
 int
 main(int argc, char *argv[])
 {
-printf("Usage:␣heatADI␣-nx=<i>␣-tFinal=<f>␣-saveMatlab=[0|1|2]␣-matlabFileName=<s>\n");
+printf("Usage: heatADI -nx=<i> -tFinal=<f> -saveMatlab=[0|1|2] -matlabFileName=<s>\n");
 
 const Real pi = M_PI; // 4.*atan2(1.,1.);
 
@@ -91,7 +91,7 @@ string line;
 for( int i=1; i<argc; i++ )
 {
 line=argv[i];
-printf("Input:␣argv[%d]␣=␣[%s]\n",i,line.c_str());
+printf("Input: argv[%d] = [%s]\n",i,line.c_str());
 
 if( parseCommand( line,"-nx=",nx) ){ ny=nx; }
 else if( parseCommand( line,"-debug=",debug) ){}
@@ -151,9 +151,9 @@ Real dt = min(dx[0],dx[1]); // time step (adjusted below)
 int Nt = ceil(tFinal/dt); // number of time-steps
 dt = tFinal/Nt; // adjust dt to reach tFinal exactly
 
-printf("-----␣2D␣Heat␣Equation␣:␣ADI␣scheme␣------\n");
-printf("␣␣␣saveMatlab=%d,␣matlabFileName=%s␣\n",saveMatlab,matlabFileName.c_str());
-printf("␣␣␣kappa=%.3g,␣nx=%d,␣ny=%d,␣tFinal=%6.2f,␣kx=%g,␣ky=%g\n",kappa,nx,ny,tFinal,kx,ky);
+printf("----- 2D Heat Equation : ADI scheme ------\n");
+printf("   saveMatlab=%d, matlabFileName=%s \n",saveMatlab,matlabFileName.c_str());
+printf("   kappa=%.3g, nx=%d, ny=%d, tFinal=%6.2f, kx=%g, ky=%g\n",kappa,nx,ny,tFinal,kx,ky);
 
 
 Real t=0., th, tn;
@@ -268,7 +268,7 @@ Real cpuTimeStep =getCPU()-cpu0;
 t= tn; // last time
 if( fabs(t-tFinal) > 1.e-12 * tFinal )
 {
-printf("...␣done␣ERROR:␣t=%12.4e,␣tFinal=%12.4e,␣t-tFinal=%9.2e\n",t,tFinal,t-tFinal);
+printf("... done ERROR: t=%12.4e, tFinal=%12.4e, t-tFinal=%9.2e\n",t,tFinal,t-tFinal);
 }
 
 // --- compute errors ---
@@ -284,20 +284,20 @@ maxNorm = max(un(i1,i2),maxNorm);
 }
 maxErr /= max(maxNorm,REAL_MIN); // relative error
 
-printf("ADI:␣nx=%3d␣ny=%3d␣Nt=%3d,␣maxNorm=%8.2e␣maxRelErr=%8.2e␣cpu(s):␣total=%9.2e,␣triSolves=%9.2e\n",
+printf("ADI: nx=%3d ny=%3d Nt=%3d, maxNorm=%8.2e maxRelErr=%8.2e cpu(s): total=%9.2e, triSolves=%9.2e\n",
 nx,ny,Nt,maxNorm,maxErr,cpuTimeStep,cpuTriSolves);
 
 // --- OPTIONALLY write a matlab file for plotting in matlab ---
 if( saveMatlab )
 {
 FILE *matlabFile = fopen(matlabFileName.c_str(),"w");
-fprintf(matlabFile,"%%␣File␣written␣by␣heatADI.C\n");
-fprintf(matlabFile,"xa=%g;␣xb=%g;␣ya=%g;␣yb=%g;␣kappa=%g;␣t=%g;␣maxErr=%10.3e;␣cpuTimeStep=%10.3e;␣cpuTriSolves=%10.3e;\n",
+fprintf(matlabFile,"%% File written by heatADI.C\n");
+fprintf(matlabFile,"xa=%g; xb=%g; ya=%g; yb=%g; kappa=%g; t=%g; maxErr=%10.3e; cpuTimeStep=%10.3e; cpuTriSolves=%10.3e;\n",
 xa,xb,ya,yb,kappa,tFinal,maxErr,cpuTimeStep,cpuTriSolves);
 
-fprintf(matlabFile,"n1a=%d;␣n1b=%d;␣nd1a=%d;␣nd1b=%d;\n",n1a,n1b,nd1a,nd1b);
-fprintf(matlabFile,"n2a=%d;␣n2b=%d;␣nd2a=%d;␣nd2b=%d;\n",n2a,n2b,nd2a,nd2b);
-fprintf(matlabFile,"dx(1)=%14.6e;␣dx(2)=%14.6e;␣numGhost=%d;\n",dx[0],dx[1],numGhost);
+fprintf(matlabFile,"n1a=%d; n1b=%d; nd1a=%d; nd1b=%d;\n",n1a,n1b,nd1a,nd1b);
+fprintf(matlabFile,"n2a=%d; n2b=%d; nd2a=%d; nd2b=%d;\n",n2a,n2b,nd2a,nd2b);
+fprintf(matlabFile,"dx(1)=%14.6e; dx(2)=%14.6e; numGhost=%d;\n",dx[0],dx[1],numGhost);
 
 if( saveMatlab>1 )
 {
@@ -306,7 +306,7 @@ writeMatlabArray( matlabFile, un, "u", 1, dimension );
 writeMatlabArray( matlabFile, err, "err", 1, dimension );
 }
 fclose(matlabFile);
-printf("Wrote␣file␣[%s]\n",matlabFileName.c_str());
+printf("Wrote file [%s]\n",matlabFileName.c_str());
 }
 
 return 0;

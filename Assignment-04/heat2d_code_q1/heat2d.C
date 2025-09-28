@@ -47,8 +47,7 @@ const Real pi = 4.*atan2(1.,1.);
 ios::sync_with_stdio(); // Synchronize C++ and C I/O subsystems
 Index::setBoundsCheck(on); // Turn on A++ array bounds checking
 
-printf("Usage:␣heat2d␣-nx=<i>␣-option=[0|1|2|3]␣-tFinal=<f>␣-debug=<i>␣-saveMatlab=[0|1|2]␣-
-labFile=<s>\n␣␣␣option␣:␣0=scalarIndexing,␣1=arrayIndexing,␣2=cIndexing,␣3=fortranRoutine\n");
+printf("Usage: heat2d -nx=<i> -option=[0|1|2|3] -tFinal=<f> -debug=<i> -saveMatlab=[0|1|2] -matlabFile=<s>\n   option : 0=scalarIndexing, 1=arrayIndexing, 2=cIndexing, 3=fortranRoutine\n ");
 
 enum BoundaryConditionsEnum
 {
@@ -148,14 +147,14 @@ const Real kyp=ky*pi;
 #define UTRUE(x,y,t) sin( kxp*(x) )*sin( kyp*(y) )*exp(-kappa*(kxp*kxp+kyp*kyp)*(t) )
 
 string optionName = option==scalarIndexing ? "scalarIndexing" :
-option==arrayIndexing ? "arrayIndexing␣" :
-option==cIndexing ? "cIndexing␣␣␣␣␣" :
+option==arrayIndexing ? "arrayIndexing " :
+option==cIndexing ? "cIndexing     " :
 option==fortranRoutine ? "fortranRoutine" : "unknown";
 
-printf("-----␣Solve␣the␣Heat␣Equation␣in␣two␣dimensions␣------\n");
-printf("␣␣␣␣␣␣option=%d␣:␣%s␣\n",option, optionName.c_str());
-printf("␣␣␣␣␣␣saveMatlab=%d,␣matlabFileName=%s␣\n",saveMatlab,matlabFileName.c_str());
-printf("␣␣␣kappa=%.3g,␣nx=%d,␣ny=%d,␣tFinal=%6.2f,␣kx=%g,␣ky=%g\n",kappa,nx,ny,tFinal,kx,ky);
+printf("----- Solve the Heat Equation in two dimensions ------\n");
+printf("      option=%d : %s \n",option, optionName.c_str());
+printf("      saveMatlab=%d, matlabFileName=%s \n",saveMatlab,matlabFileName.c_str());
+printf("   kappa=%.3g, nx=%d, ny=%d, tFinal=%6.2f, kx=%g, ky=%g\n",kappa,nx,ny,tFinal,kx,ky);
 
 
 // we store two time levels
@@ -248,7 +247,7 @@ un(nd1a,nd2a), u(nd1a,nd2a), rx,ry );
 }
 else
 {
-printf("ERROR:␣unknown␣option=%d\n",option);
+printf("ERROR: unknown option=%d\n",option);
 abort();
 }
 
@@ -283,7 +282,7 @@ un(i1,i2g) = 3.*un(i1,i2) - 3.*un(i1,i2+is) + un(i1,i2+2*is); // extrap ghost
 }
 else
 {
-printf("ERROR:␣unknown␣boundaryCondition=%d\n",boundaryCondition(side,axis));
+printf("ERROR: unknown boundaryCondition=%d\n",boundaryCondition(side,axis));
 abort();
 }
 
@@ -307,7 +306,7 @@ maxNorm = max(uc(i1,i2),maxNorm);
 }
 maxErr /= max(maxNorm,REAL_MIN); // relative error
 
-printf("option=%s:␣numSteps=%d␣nx=%d␣maxNorm=%8.2e␣maxRelErr=%8.2e␣cpuTimeStep=%9.2e(s)\n",
+printf("option=%s: numSteps=%d nx=%d maxNorm=%8.2e maxRelErr=%8.2e cpuTimeStep=%9.2e(s)\n",
 optionName.c_str(),numSteps,nx,maxNorm,maxErr,cpuTimeStep);
 
 if( nx<=10 )
@@ -320,14 +319,14 @@ err.display("err");
 if( saveMatlab )
 {
 FILE *matlabFile = fopen(matlabFileName.c_str(),"w");
-fprintf(matlabFile,"%%␣File␣written␣by␣heat2d.C\n");
-fprintf(matlabFile,"xa=%g;␣xb=%g;␣ya=%g;␣yb=%g;␣kappa=%g;␣t=%g;␣maxErr=%10.3e;␣cpuTimeStep=%10.3e;\n",
+fprintf(matlabFile,"%% File written by heat2d.C\n");
+fprintf(matlabFile,"xa=%g; xb=%g; ya=%g; yb=%g; kappa=%g; t=%g; maxErr=%10.3e; cpuTimeStep=%10.3e;\n",
 xa,xb,ya,yb,kappa,tFinal,maxErr,cpuTimeStep);
 
-fprintf(matlabFile,"n1a=%d;␣n1b=%d;␣nd1a=%d;␣nd1b=%d;\n",n1a,n1b,nd1a,nd1b);
-fprintf(matlabFile,"n2a=%d;␣n2b=%d;␣nd2a=%d;␣nd2b=%d;\n",n2a,n2b,nd2a,nd2b);
-fprintf(matlabFile,"dx(1)=%14.6e;␣dx(2)=%14.6e;␣numGhost=%d;\n",dx[0],dx[1],numGhost);
-fprintf(matlabFile,"option=%d;␣optionName=\’%s\’;\n",option,optionName.c_str());
+fprintf(matlabFile,"n1a=%d; n1b=%d; nd1a=%d; nd1b=%d;\n",n1a,n1b,nd1a,nd1b);
+fprintf(matlabFile,"n2a=%d; n2b=%d; nd2a=%d; nd2b=%d;\n",n2a,n2b,nd2a,nd2b);
+fprintf(matlabFile,"dx(1)=%14.6e; dx(2)=%14.6e; numGhost=%d;\n",dx[0],dx[1],numGhost);
+fprintf(matlabFile,"option=%d; optionName=\'%s\';\n",option,optionName.c_str());
 
 if( saveMatlab>1 )
 {
@@ -336,7 +335,7 @@ writeMatlabArray( matlabFile, ua[cur], "u", 1, dimension );
 writeMatlabArray( matlabFile, err, "err", 1, dimension );
 }
 fclose(matlabFile);
-printf("Wrote␣file␣[%s]\n",matlabFileName.c_str());
+printf("Wrote file [%s]\n",matlabFileName.c_str());
 }
 
 return 0;

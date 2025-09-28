@@ -23,7 +23,7 @@ int count=0;
 for( int i2=nd2a; i2<=nd2b; i2++ )
 for( int i1=nd1a; i1<=nd1b; i1++ )
 {
-fprintf(matlabFile,"%s(%3d,%3d)=%12.5e;␣",name,i1-nd1a+1,i2-nd2a+1,u(i1,i2));
+fprintf(matlabFile,"%s(%3d,%3d)=%12.5e; ",name,i1-nd1a+1,i2-nd2a+1,u(i1,i2));
 if( count % numPerLine == numPerLine-1 )
 fprintf(matlabFile,"\n"); // new line
 count++;
@@ -39,7 +39,7 @@ for( int m=0; m<numberOfComponents; m++ )
 for( int i2=nd2a; i2<=nd2b; i2++ )
 for( int i1=nd1a; i1<=nd1b; i1++ )
 {
-fprintf(matlabFile,"%s(%3d,%3d,%d)=%12.5e;␣",name,i1-nd1a+1,i2-nd2a+1,m+1,u(i1,i2,m));
+fprintf(matlabFile,"%s(%3d,%3d,%d)=%12.5e; ",name,i1-nd1a+1,i2-nd2a+1,m+1,u(i1,i2,m));
 if( count % numPerLine == numPerLine-1 )
 fprintf(matlabFile,"\n"); // new line
 count++;

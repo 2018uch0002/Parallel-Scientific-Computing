@@ -13,7 +13,7 @@
 # you should see A++.h as well as other include files.
 
 # First target is made by default when using "make", traditionally named "all" 
-all: heat1dImp
+all: heatADI
 
 # Set names of compilers once in case we need to change them
 CC = gcc
@@ -33,10 +33,16 @@ LIBS = $(AppLibraries)
 %.o : %.C
 	$(CXX) $(CCFLAGS) -o $@ -c $<
 
-# 1D heat equation, implicit time-stepping, A++ arrays
-heat1dImpFiles = heat1dImp.o tridiagonal.o
-heat1dImp: $(heat1dImpFiles)
-	$(CXX) $(CCFLAGS) -o $@ $(heat1dImpFiles) $(LIBS)
+opt = -O3
+FC = gfortran
+FFLAGS = $(opt) -fdefault-real-8 -fdefault-double-8 -ffree-line-length-none
+%.o : %.f90
+	$(FC) $(FFLAGS) -o $@ -c $<
+
+# 2D heat equation, implicit time-stepping, A++ arrays
+heatADIFiles = tridiagonal.o heatADI.o
+heatADI: $(heatADIFiles)
+	$(CXX) $(CCFLAGS) -o $@ $(heatADIFiles) $(LIBS)
 
 clean:
 	rm *.o
