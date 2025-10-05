@@ -7,9 +7,11 @@
 #include <float.h>
 #include <assert.h>
 
-// Include file for OpenMP
+// OpenMP header file
 #include <omp.h>
 
+// to parse the command ouput
+#include "parseCommand.h" 
 
 // define a new type "Real" which is equivalent to a "double"
 typedef double Real;
@@ -18,11 +20,10 @@ typedef double Real;
 using std::string;
 using std::max;
 
-// getCPU() : Return the current wall-clock time in seconds
-#include "getCPU.h"
+#include <ctime>
 
-// include commands tp parse command line arguments
-#include "parseCommand.h"
+// to get the cpu time that uses OpenMP
+#include "getCPU.h"
 
 
 // ---------------------------------------------------------------------------------------
@@ -54,9 +55,11 @@ int writeMatlabVector( FILE *matlabFile, Real *u_p, const char *name, int nd1a, 
 
 int main( int argc, char* argv[] )
 {
-    printf("Usage: heat1d -nx=<i> -tFinal=<i> -matlabFileName=<s> -numThreads=<i>\n"
-            " Nx = number of grid cells.\n"
-            " matlabFileName.m : save results to this file.\n");
+    printf("Usage: heat1d [nx] [matlabFileName.m]\n"
+    "       nx = number of grid cells.\n"
+    "       tFinal = final-time\n"
+    "       matlabFileName.m : save results to this file.\n"
+    "       numThreads= number of threads.\n");
 
     #define TRIG_DD 1
     #define TRIG_NN 2
@@ -75,24 +78,32 @@ int main( int argc, char* argv[] )
     int debug=0; // set to 1 for debug info
     Real xa=0., xb=1.;
     Real kappa= .1;
-    Real tFinal = .01;
+    Real tFinal = .2;
     Real cfl=.9; // time-step safety factor
 
     int Nx=10; // default
+    int numThreads= 1; //default number of threads
     string matlabFileName = "heat1d.m";
-    int numThreads=1;
-    int version=1;
-
     string line;
-    for( int i=1; i<argc; i++ )
-    {
-        line=argv[i];
-        if( parseCommand( line,"-nx=",Nx) ){}
-        else if( parseCommand( line,"-numThreads=",numThreads) ){}
-        else if( parseCommand( line,"-version=",version) ){}
-        else if( parseCommand( line, "-tFinal=",tFinal) ){}
-        else if( parseCommand( line,"-matlabFileName=",matlabFileName) ){}
+    for(int n_arg=1; n_arg < argc; n_arg++){
+        line = argv[n_arg];
+        if(parseCommand(line, "-nx=", Nx)){}
+        else if(parseCommand(line, "-tFinal=", tFinal)){}
+        else if(parseCommand(line, "-matlabFileName=", matlabFileName)){}
+        else if(parseCommand(line, "-numThreads=", numThreads)){}
+        
     }
+
+    // if( argc>=2 ) // read any command line arguments
+    // {
+    // Nx= atoi(argv[1]);
+    // printf("Setting Nx=%d\n",Nx);
+    // if( argc>=3 )
+    // {
+    // matlabFileName = argv[2];
+    // printf("Setting matlabFileName=[%s]\n",matlabFileName.c_str());
+    // }
+    // }
 
     // ============= Grid and indexing==============
     // xa xb
@@ -115,12 +126,13 @@ int main( int argc, char* argv[] )
     #define x(i) x_p[i-nd1a]
 
     for( int i=nd1a; i<=nd1b; i++ )
-        x(i) = xa + (i-n1a)*dx;
+    x(i) = xa + (i-n1a)*dx;
+
 
     if( debug>1 )
     {
-        for( int i=nd1a; i<=nd1b; i++ )
-            printf("x(%2d)=%12.4e\n",i,x(i));
+    for( int i=nd1a; i<=nd1b; i++ )
+    printf("x(%2d)=%12.4e\n",i,x(i));
     }
 
     const int dirichlet=1, neumann=2;
@@ -134,7 +146,7 @@ int main( int argc, char* argv[] )
     const Real kappaPiSq = kappa*kxPi*kxPi;
 
     #if SOLUTION == TRIG_DD
-    // True solution for dirichlet BC's
+    // True solution for dirichlet BC’s
     boundaryCondition(0,0) = dirichlet;
     boundaryCondition(1,0) = dirichlet;
 
@@ -146,7 +158,7 @@ int main( int argc, char* argv[] )
 
     #elif SOLUTION == TRIG_NN
 
-    // True solution for Neumann BC's
+    // True solution for Neumann BC’s
     boundaryCondition(0,0) = neumann;
     boundaryCondition(1,0) = neumann;
     const char solutionName[] = "trueNN";
@@ -176,6 +188,7 @@ int main( int argc, char* argv[] )
     #define UTRUEXX(x,t) ( 2.*b2 )*( a0 + (t)*( a1 ) )
 
     // force = u_t - kappa*u.xx
+
     #define FORCE(x,t) ( UTRUET(x,t) - kappa*UTRUEXX(x,t) )
 
     #else
@@ -197,8 +210,9 @@ int main( int argc, char* argv[] )
     int cur = 0; // "current" solution, index into u_p[]
     int i;
     #pragma omp parallel for default(shared) private(i) num_threads(numThreads)
-    for( i=nd1a; i<=nd1b; i++ )
-    uc(i)=UTRUE(x(i),t);
+        for( i=nd1a; i<=nd1b; i++ ){
+            uc(i)=UTRUE(x(i),t);
+        }
 
     if( debug>0 )
     {
@@ -217,18 +231,14 @@ int main( int argc, char* argv[] )
 
     printf("------------------- Solve the heat equation in 1D solution=%s --------------------- \n",
     solutionName);
-    printf(" **version=%d**\n",version);
-    printf(" numGhost=%d, n1a=%d, n1b=%d, nd1a=%d, nd1b=%d, numThreads=%d\n",numGhost,n1a,n1b,nd1a,nd1b,numThreads);
-    printf(" numSteps=%d, Nx=%d, kappa=%g, tFinal=%g, boundaryCondition(0,0)=%d, boundaryCondition(1,0)=%d\n",
-    numSteps,Nx,kappa,tFinal,boundaryCondition(0,0),boundaryCondition(1,0));
+    printf("  numGhost=%d, n1a=%d, n1b=%d, nd1a=%d, nd1b=%d\n",numGhost,n1a,n1b,nd1a,nd1b);
+    printf("  numSteps=%d, Nx=%d, kappa=%g, tFinal=%g, boundaryCondition(0,0)=%d, boundaryCondition(1,0)=%d\n",
+            numSteps,Nx,kappa,tFinal,boundaryCondition(0,0),boundaryCondition(1,0));
 
+    // ---------- TIME-STEPPING LOOP ---------
     Real cpu0 = getCPU();
-    if( version==1 )
+    for( int n=0; n<numSteps; n++ )
     {
-        // OMP version 1
-        // ---------- TIME-STEPPING LOOP ---------
-        for( int n=0; n<numSteps; n++ )
-        {
         t = n*dt; // current time
 
         const int cur = n % 2; // current time level
@@ -237,120 +247,59 @@ int main( int argc, char* argv[] )
         // --- update the interior points ----
         int i;
         #pragma omp parallel for default(shared) private(i) num_threads(numThreads)
-        for( i=n1a; i<=n1b; i++ )
-        {
-        un(i) = uc(i) + rx*( uc(i+1) - 2.*uc(i) + uc(i-1) ) + dt*FORCE( x(i),t );
-        }
+            for(i=n1a; i<=n1b; i++ )
+            {
+                un(i) = uc(i) + rx*( uc(i+1) - 2.*uc(i) + uc(i-1) ) + dt*FORCE( x(i),t );
+            }
+        
+
 
         // ---- boundary conditions ----
         for( int side=0; side<=1; side++ )
         {
-        const int i = side==0 ? n1a : n1b; // boundary index
-        const int is = 1 - 2*side; // is = 1 on left, -1 on right
-        if( boundaryCondition(side,0)==dirichlet )
-        {
-        un(i) = UTRUE(x(i),t+dt);
-        un(i-is) = 3.*un(i) - 3.*un(i+is) + un(i+2*is); // extrapolate ghost
-        }
-        else
-        {
-        // Neumann BC
-        un(i-is) = un(i+is) - 2.*is*dx*UTRUEX(x(i),t+dt);
-        }
+            const int i = side==0 ? n1a : n1b; // boundary index
+            const int is = 1 - 2*side; // is = 1 on left, -1 on right
+            if( boundaryCondition(side,0)==dirichlet )
+            {
+                un(i) = UTRUE(x(i),t+dt);
+                un(i-is) = 3.*un(i) - 3.*un(i+is) + un(i+2*is); // extrapolate ghost
+            }
+            else
+            {
+                // Neumann BC
+                un(i-is) = un(i+is) - 2.*is*dx*UTRUEX(x(i),t+dt);
+            }
         }
 
         if( debug>1 )
         {
-        printf("step %d: After update interior and real BCs\n u=[",n+1);
-        for( int i=nd1a; i<=nd1b; i++ )
-        printf("%12.4e, ",un(i));
-        printf("]\n");
+            printf("step %d: After update interior and real BCs\n u=[",n+1);
+            for( int i=nd1a; i<=nd1b; i++ )
+                printf("%12.4e, ",un(i));
+            printf("]\n");
         }
 
         if( debug>0 )
         {
-        // compute the error
-        Real maxErr=0.;
-        for( int i=nd1a; i<=nd1b; i++ )
-        {
-        Real err = fabs( un(i) - UTRUE(x(i),t+dt) );
-        maxErr = max( maxErr,err );
-        }
-        printf("step=%d, t=%9.3e, maxErr=%9.2e\n",n+1,t+dt,maxErr);
-        }
-
-        } // end time-stepping loop
-    }
-    else if( version==2 )
-    {
-        // OMP version 2
-        // Question: Is is faster to start the parallel region outside the time-stepping loop so we
-        // don't incur the over-head of creating threads every time step?
-        // Answer: This version below seems slower
-
-        // ---------- TIME-STEPPING LOOP ---------
-        int i,n,cur,next;
-        #pragma omp parallel default(shared) private(n,i) num_threads(numThreads)
-        {
-        for( n=0; n<numSteps; n++ )
-        {
-
-        #pragma omp single
-        {
-        t = n*dt; // current time
-
-        cur = n % 2; // current time level
-        next = (n+1) % 2; // next time level
+            // compute the error
+            Real maxErr=0.;
+            for( int i=nd1a; i<=nd1b; i++ )
+            {
+                Real err = fabs( un(i) - UTRUE(x(i),t+dt) );
+                maxErr = max( maxErr,err );
+            }
+            printf("step=%d, t=%9.3e, maxErr=%9.2e\n",n+1,t+dt,maxErr);
         }
 
-        #pragma omp barrier
+    } // end time-stepping loop
 
-        // --- update the interior points ----
-        #pragma omp for
-        for( i=n1a; i<=n1b; i++ )
-        {
-        un(i) = uc(i) + rx*( uc(i+1) - 2.*uc(i) + uc(i-1) ) + dt*FORCE( x(i),t );
-        }
-
-        #pragma omp barrier
-
-        // ---- boundary conditions ----
-        #pragma omp single
-        {
-        for( int side=0; side<=1; side++ )
-        {
-        const int i = side==0 ? n1a : n1b; // boundary index
-        const int is = 1 - 2*side; // is = 1 on left, -1 on right
-        if( boundaryCondition(side,0)==dirichlet )
-        {
-        un(i) = UTRUE(x(i),t+dt);
-        un(i-is) = 3.*un(i) - 3.*un(i+is) + un(i+2*is); // extrapolate ghost
-        }
-        else
-        {
-        // Neumann BC
-        un(i-is) = un(i+is) - 2.*is*dx*UTRUEX(x(i),t+dt);
-        }
-        }
-        }
-
-
-        } // end time-stepping loop
-        }
-
-
-    }
-    else
-    {
-        printf("ERROR: unknown version=%d\n",version);
-        abort();
-    }
     Real cpuTimeStep = getCPU()-cpu0;
+
     // ---- check the error -----
     t +=dt; // tFinal;
     if( fabs(t-tFinal) > 1e-3*dt/tFinal )
     {
-    printf("ERROR: AFTER TIME_STEPPING: t=%16.8e IS NOT EQUAL to tFinal=%16.8e\n",t,tFinal);
+        printf("ERROR: AFTER TIME_STEPPING: t=%16.8e IS NOT EQUAL to tFinal=%16.8e\n",t,tFinal);
     }
 
     Real *error_p = new Real [nd1];
@@ -360,18 +309,18 @@ int main( int argc, char* argv[] )
     Real maxErr=0.;
     for( int i=nd1a; i<=nd1b; i++ )
     {
-    error(i) = uc(i) - UTRUE(x(i),t);
-    maxErr = max( maxErr, abs(error(i)) );
+        error(i) = uc(i) - UTRUE(x(i),t);
+        maxErr = max( maxErr, abs(error(i)) );
     }
 
-    printf("numThreads=%2d, numSteps=%4d, Nx=%3d, maxErr=%9.2e, cpu=%9.2e(s)\n",numThreads,numSteps,Nx,maxErr,cpuTimeStep);
+
+    printf("numSteps=%4d, Nx=%3d, maxErr=%9.2e, cpu=%9.2e(s), numThreads=%d\n",numSteps,Nx,maxErr,cpuTimeStep, numThreads);
 
     // --- Write a file for plotting in matlab ---
     FILE *matlabFile = fopen(matlabFileName.c_str(),"w");
     fprintf(matlabFile,"%% File written by heat1d.C\n");
-    fprintf(matlabFile,"xa=%g; xb=%g; kappa=%g; t=%g; maxErr=%10.3e; cpuTimeStep=%10.3e;\n",xa,xb, 
-            kappa,tFinal,maxErr,cpuTimeStep);
-    fprintf(matlabFile,"Nx=%d; dx=%14.6e; numGhost=%d; n1a=%d; n1b=%d; nd1a=%d; nd1b=%d; numThreads=%d;\n",Nx,dx,numGhost,n1a,n1b,nd1a,nd1b,numThreads);
+    fprintf(matlabFile,"xa=%g; xb=%g; kappa=%g; t=%g; maxErr=%10.3e; cpuTimeStep=%10.3e, numThreads=%d;\n",xa,xb, kappa,tFinal,maxErr,cpuTimeStep, numThreads);
+    fprintf(matlabFile,"Nx=%d; dx=%14.6e; numGhost=%d; n1a=%d; n1b=%d; nd1a=%d; nd1b=%d;\n",Nx,dx, numGhost,n1a,n1b,nd1a,nd1b);
     fprintf(matlabFile,"solutionName=\'%s\';\n",solutionName);
 
     writeMatlabVector( matlabFile, x_p, "x", nd1a, nd1b );
@@ -389,3 +338,4 @@ int main( int argc, char* argv[] )
 
     return 0;
 }
+
