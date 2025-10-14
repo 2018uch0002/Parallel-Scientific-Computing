@@ -174,7 +174,7 @@ main(int argc, char *argv[])
 
   const int Ngx = nd1, Ngy=nd2; // size of tridiagonal systems
   RealArray Ax(3,Ngx), Ay(3,Ngy);
-  // RealArray rhsx(Ngx), rhsy(Ngy);
+  RealArray rhsx(Ngx * numThreads), rhsy(Ngy * numThreads);
   // Real *rhsx_p = rhsx.getDataPointer();
   // Real *rhsy_p = rhsy.getDataPointer();
 
@@ -198,7 +198,6 @@ main(int argc, char *argv[])
   int side = 0;
 
   const Real *Ax_p = Ax.getDataPointer();
-  RealArray rhsx(Ngx * numThreads), rhsy(Ngy * numThreads);
 
   #pragma omp parallel default(shared) private(n, i1, i2, side) num_threads(numThreads)
   {
@@ -250,9 +249,6 @@ main(int argc, char *argv[])
     #pragma omp for private(i1, i2)
     for( i2=n2a+1; i2<=n2b-1; i2++ ) // exclude top an bottom boundaries
     {
-      // RealArray rhsx(Ngx);
-      // Real *rhsx_p = rhsx.getDataPointer();
-      
       for( i1=n1a; i1<=n1b; i1++ )
         rhsx_p[i1] = U(i1,i2);
   
@@ -316,10 +312,7 @@ main(int argc, char *argv[])
     cpu1 = getCPU();
     #pragma omp for private(i1, i2)
     for( i1=n1a+1; i1<=n1b-1; i1++ ) // exclude left and right boundaries
-    {
-      // RealArray rhsy(Ngy);
-      // Real *rhsy_p = rhsy.getDataPointer();
-      
+    {      
       for( i2=n2a; i2<=n2b; i2++ )
         rhsy_p[i2] = UN(i1,i2);
 
