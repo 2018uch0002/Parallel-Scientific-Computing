@@ -543,12 +543,9 @@ int conjugateGradientIteration( RealArray & u, RealArray & f, PoissonParameters 
 
   // printf("CG: res0=%9.2e, rNormSquared=%9.2e\n",res0,rNormSquared);
 
-  int n, nOld=-1, numIterations=0;
-  // #pragma omp parallel default(shared) private(i1, i2) num_threads(numThreads)
-  // {
+  int n, nOld=-1;
   for( n=0; n<maxIterations; n++ )
   {
-
     // Note: Some loops have been combined for speed
 
     // z = A p
@@ -635,10 +632,10 @@ int conjugateGradientIteration( RealArray & u, RealArray & f, PoissonParameters 
         break;
     }
 
-  // }
-  numIterations=n;
   }
   Real cpu = getCPU()-cpu1;
+
+  const int numIterations=n;
 
   // printf("numIterations=%d, nx=%d, ny=%d, cpu time= %9.2e (s)\n",numIterations,nx,ny,cpu);
   if( maxRes<tol )

@@ -802,21 +802,30 @@ main(int argc, char *argv[])
   uTrue(i1,i2) = UTRUE(xi,yi);
   }
 
-  // ===== JACOBI =====
-  u=0.; // initial guess
-  jacobiIteration( u, f, par, numThreads );
+  int a[7] = {1, 2, 4, 8, 16, 32, 64};
+  for (int itr = 0; itr<7; itr++)
+  {
+    numThreads = a[itr];
+    printf("..........................numThreads = %d.........................................\n\n", numThreads);
 
-  // ===== Gauss-Seidel =====
-  u=0.; // initial guess
-  gaussSeidelIteration( u, f, par, numThreads );
+    // ===== JACOBI =====
+    u=0.; // initial guess
+    jacobiIteration( u, f, par, numThreads );
 
-  // ===== Red-Black Gauss-Seidel =====
-  u=0.; // initial guess
-  redBlackIteration( u, f, par, numThreads );
+    // // ===== Gauss-Seidel =====
+    u=0.; // initial guess
+    gaussSeidelIteration( u, f, par, numThreads );
 
-  // ==== Conjugate Gradient =========
-  u=0.; // initial guess
-  conjugateGradientIteration( u,f,par, numThreads );
+    // ===== Red-Black Gauss-Seidel =====
+    u=0.; // initial guess
+    redBlackIteration( u, f, par, numThreads );
+
+    // ==== Conjugate Gradient =========
+    u=0.; // initial guess
+    conjugateGradientIteration( u,f,par, numThreads );
+
+    printf(".........................................................................\n\n");
+  }
 
   return 0;
 }
