@@ -1,0 +1,4 @@
+------------------- DebugFileDemo --------------------- 
+ np=4, myRank=2
+ procName=[cgi], pid=955909, MPI version 4.0
+ Time to sleep =  2.00e-01(s)
