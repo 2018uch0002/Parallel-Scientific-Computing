@@ -1,9 +1,32 @@
 ------------------- DebugFileDemo --------------------- 
  np=2, myRank=1
+x(-1)=  0.0000e+00
+x( 0)=  0.0000e+00
+x( 1)=  0.0000e+00
+x( 2)=  0.0000e+00
+x( 3)=  0.0000e+00
+x( 4)= 3.2114e-322
+x( 5)=  5.0000e-01
+x( 6)=  6.0000e-01
+x( 7)=  7.0000e-01
+x( 8)=  8.0000e-01
+x( 9)=  9.0000e-01
+x(10)=  1.0000e+00
+x(11)=  1.1000e+00
 After initial conditions
  u=[0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00, 3.0286e-321, -1.0000e+00, -5.8779e-01, 3.0902e-01, 9.5106e-01, 8.0902e-01, 3.6739e-16, -8.0902e-01, ]
+step 1: After update interior and real BCs
+ u=[ 4.6759e-310,   0.0000e+00,         -nan,   0.0000e+00,         -nan,   0.0000e+00,         -nan,  -3.9395e-01,   2.0711e-01,   6.3742e-01,   5.4223e-01,   2.5753e-16,  -9.8925e-01, ]
 step=1, t=4.000e-02, maxErr= 4.22e-01
-step=2, t=8.000e-02, maxErr= 2.66e-01
-step=3, t=1.200e-01, maxErr= 2.77e-01
-step=4, t=1.600e-01, maxErr= 2.09e-01
-step=5, t=2.000e-01, maxErr= 1.94e-01
+step 2: After update interior and real BCs
+ u=[  0.0000e+00,         -nan,   0.0000e+00,   0.0000e+00,   0.0000e+00,  3.0286e-321,  -1.0000e+00,         -nan,   1.3881e-01,   4.2722e-01,   3.6342e-01,   1.8052e-16,  -6.6303e-01, ]
+step=2, t=8.000e-02, maxErr= 5.09e-01
+step 3: After update interior and real BCs
+ u=[ 4.6759e-310,         -nan,         -nan,   0.0000e+00,         -nan,   0.0000e+00,         -nan,         -nan,         -nan,   2.8633e-01,   2.4357e-01,   1.2653e-16,  -4.4438e-01, ]
+step=3, t=1.200e-01, maxErr= 1.66e-01
+step 4: After update interior and real BCs
+ u=[  0.0000e+00,         -nan,   0.0000e+00,   0.0000e+00,   0.0000e+00,  3.0286e-321,  -1.0000e+00,         -nan,         -nan,         -nan,   1.6325e-01,   8.8696e-17,         -nan, ]
+step=4, t=1.600e-01, maxErr= 7.59e-01
+step 5: After update interior and real BCs
+ u=[ 4.6759e-310,         -nan,         -nan,   0.0000e+00,         -nan,   0.0000e+00,         -nan,         -nan,         -nan,         -nan,         -nan,   6.2172e-17,         -nan, ]
+step=5, t=2.000e-01, maxErr=4.68e-310
