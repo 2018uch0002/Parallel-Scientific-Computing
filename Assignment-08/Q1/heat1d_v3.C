@@ -99,22 +99,12 @@ int main( int argc, char* argv[] )
     int Nx=10; // default
     string matlabFileName = "heat1d.m";
     string line;
-    int commOption = 0;
-    
     for(int n_arg=1; n_arg < argc; n_arg++){
         line = argv[n_arg];
         if(parseCommand(line, "-nx=", Nx, myRank == 0)){}
         else if(parseCommand(line, "-tFinal=", tFinal, myRank == 0)){}
         else if(parseCommand(line, "-matlabFileName=", matlabFileName, myRank == 0)){}
         else if(parseCommand(line, "-debug=", debug, myRank == 0)){}
-        else if(parseCommand(line, "-commOption=", commOption, myRank == 0)){}
-    }
-
-    char commOptionStr[30];
-    if (commOption == 0){
-        sprintf(commOptionStr, "blockSendReceive");
-    } else if (commOption == 1){
-        sprintf(commOptionStr, "nonblockSendReceive");
     }
 
     
@@ -135,7 +125,7 @@ int main( int argc, char* argv[] )
             if( ( ifile==1 && debug>0 ) ) // write to debugFile if debug>0
             {
             fprintf(file,"------------------- DebugFileDemo --------------------- \n");
-            fprintf(file," np=%d, myRank=%d, commOption=%d: %s\n",np,myRank, commOption, commOptionStr);
+            fprintf(file," np=%d, myRank=%d\n",np,myRank);
             }
         }
     }
@@ -232,25 +222,8 @@ int main( int argc, char* argv[] )
     #elif SOLUTION == TRIG_NN
 
     // True solution for Neumann BC’s
-    if (myRank == 0)
-    {
-        boundaryCondition(0,0) = neumann;
-        if (np != 1)
-            boundaryCondition(1,0) = parallel_ghost;
-        else 
-            boundaryCondition(1,0) = neumann;
-    } 
-    else if (myRank == np-1 )
-    {
-        boundaryCondition(0,0) = parallel_ghost;
-        boundaryCondition(1,0) = neumann;
-    }  
-    else 
-    {
-        boundaryCondition(0,0) = parallel_ghost;
-        boundaryCondition(1,0) = parallel_ghost;
-    }
-
+    boundaryCondition(0,0) = neumann;
+    boundaryCondition(1,0) = neumann;
     const char solutionName[] = "trueNN";
 
     #define UTRUE(x,t) cos(kxPi*(x))*exp( -kappaPiSq*(t) )
@@ -262,46 +235,12 @@ int main( int argc, char* argv[] )
     // polynomial manufactured solution
     #if SOLUTION == POLY_DD
     const char solutionName[] = "polyDD";
-    if (myRank == 0)
-    {
-        boundaryCondition(0,0) = dirichlet;
-        if (np != 1)
-            boundaryCondition(1,0) = parallel_ghost;
-        else 
-            boundaryCondition(1,0) = dirichlet;
-    } 
-    else if (myRank == np-1 )
-    {
-        boundaryCondition(0,0) = parallel_ghost;
-        boundaryCondition(1,0) = neumdirichletann;
-    }  
-    else 
-    {
-        boundaryCondition(0,0) = parallel_ghost;
-        boundaryCondition(1,0) = parallel_ghost;
-    }
-
+    boundaryCondition(0,0) = dirichlet;
+    boundaryCondition(1,0) = dirichlet;
     #else
     const char solutionName[] = "polyNN";
-    if (myRank == 0)
-    {
-        boundaryCondition(0,0) = neumann;
-        if (np != 1)
-            boundaryCondition(1,0) = parallel_ghost;
-        else 
-            boundaryCondition(1,0) = neumann;
-    } 
-    else if (myRank == np-1 )
-    {
-        boundaryCondition(0,0) = parallel_ghost;
-        boundaryCondition(1,0) = neumann;
-    }  
-    else 
-    {
-        boundaryCondition(0,0) = parallel_ghost;
-        boundaryCondition(1,0) = parallel_ghost;
-    }
-
+    boundaryCondition(0,0) = neumann;
+    boundaryCondition(1,0) = neumann;
     #endif
 
     const Real b0=1., b1=.5, b2=.25;
@@ -342,13 +281,13 @@ int main( int argc, char* argv[] )
         uc(i)=UTRUE(x(i),t);
     }
 
-    // if( debug>0 )
-    // {
-    //     fprintf(debugFile, "After initial conditions\n u=[");
-    //     for( int i=nd1a_l; i<=nd1b_l; i++ )
-    //         fprintf(debugFile, "%10.4e, ",uc(i));
-    //     fprintf(debugFile, "]\n");
-    // }
+    if( debug>0 )
+    {
+        fprintf(debugFile, "After initial conditions\n u=[");
+        for( int i=nd1a_l; i<=nd1b_l; i++ )
+            fprintf(debugFile, "%10.4e, ",uc(i));
+        fprintf(debugFile, "]\n");
+    }
 
     // Time-step restriction is kappa*dt/dx^2 < .5
     const Real dx2 = dx*dx;
@@ -360,7 +299,6 @@ int main( int argc, char* argv[] )
     if (myRank == 0){
         printf("------------------- Solve the heat equation in 1D solution=%s --------------------- \n",
         solutionName);
-        printf("  np = %d, comOption=%d : %s \n", np, commOption, commOptionStr);
         printf("  numGhost=%d, n1a=%d, n1b=%d, nd1a=%d, nd1b=%d\n",numGhost,n1a,n1b,nd1a,nd1b);
         printf("  numSteps=%d, Nx=%d, kappa=%g, tFinal=%g, boundaryCondition(0,0)=%d, boundaryCondition(1,0)=%d\n",
                 numSteps,Nx,kappa,tFinal,boundaryCondition(0,0),boundaryCondition(1,0));
@@ -421,153 +359,92 @@ int main( int argc, char* argv[] )
             // handelling the parallel ghost points
             if (np != 1)
             {
-                if (commOption == 0) // with blockedSendRecive
+                if (side == 0) // left side boundary
                 {
-                    if (side == 0) // left side boundary
-                    {
-                        // first ask all the even ranks to send the value at n1b_l to odd ranks
-                        if ((myRank%2 ==0) && (myRank != (np-1)))
-                        {   // even ranks are sending the right side value
-                            int send_tag = 100 * myRank + 1; // send tag for the right side point 
+                    // first ask all the even ranks to send the value at n1b_l to odd ranks
+                    if ((myRank%2 ==0) && (myRank != (np-1)))
+                    {   // even ranks are sending the right side value
+                        int send_tag = 100 * myRank + 1; // send tag for the right side point 
+                        MPI_Send(&uc(n1b_l), 1, MPI_DOUBLE, myRank+1, send_tag, MPI_COMM_WORLD);
+                    } 
+                    else 
+                    {   // odd ranks are receiving value from previus rank for the left side evaluation.
+                        int recv_tag = 100 * (myRank-1) + 1;
+                        MPI_Status status;
+                        Real uc_nd1a_l = 0.;
+                        MPI_Recv(&uc_nd1a_l, 1, MPI_DOUBLE, myRank-1, recv_tag, MPI_COMM_WORLD, &status);
+                        uc(i-1) = uc_nd1a_l;
+                        un(i) = uc(i) + rx*( uc(i+1) - 2.*uc(i) + uc(i-1) ) + dt*FORCE( x(i),t );
+                    }
+                    // MPI_Barrier(MPI_COMM_WORLD);
+                    
+                    // now, odd rank will send the value at n1b_l and previous even ranks will receieve it.
+                    if (myRank%2 == 1)
+                    {   // odd ranks will send the data
+                        int send_tag = 100 * myRank + 1; // send tag for the right side point 
+                        if (myRank != (np-1)) // last rank cannot send the value none can receive it.
+                        {
                             MPI_Send(&uc(n1b_l), 1, MPI_DOUBLE, myRank+1, send_tag, MPI_COMM_WORLD);
-                        } 
-                        else 
-                        {   // odd ranks are receiving value from previus rank for the left side evaluation.
-                            int recv_tag = 100 * (myRank-1) + 1;
-                            MPI_Status status;
-                            Real uc_nd1a_l = 0.;
+                        }
+                    }
+                    else
+                    {   // even ranks will recieve.
+                        int recv_tag = 100 * (myRank-1) + 1;
+                        MPI_Status status;
+                        Real uc_nd1a_l = 0.;
+                        if (myRank != 0) // rank-0 must not evaluate the left side bc as it will not parallel-ghost-bs
+                        {
                             MPI_Recv(&uc_nd1a_l, 1, MPI_DOUBLE, myRank-1, recv_tag, MPI_COMM_WORLD, &status);
                             uc(i-1) = uc_nd1a_l;
-                            un(i) = uc(i) + rx*( uc(i+1) - 2.*uc(i) + uc(i-1) ) + dt*FORCE( x(i),t );
-                        }
-                        
-                        // now, odd rank will send the value at n1b_l and previous even ranks will receieve it.
-                        if (myRank%2 == 1)
-                        {   // odd ranks will send the data
-                            int send_tag = 100 * myRank + 1; // send tag for the right side point 
-                            if (myRank != (np-1)) // last rank cannot send the value none can receive it.
-                            {
-                                MPI_Send(&uc(n1b_l), 1, MPI_DOUBLE, myRank+1, send_tag, MPI_COMM_WORLD);
-                            }
-                        }
-                        else
-                        {   // even ranks will recieve.
-                            int recv_tag = 100 * (myRank-1) + 1;
-                            MPI_Status status;
-                            Real uc_nd1a_l = 0.;
-                            if (myRank != 0) // rank-0 must not evaluate the left side bc as it will not parallel-ghost-bs
-                            {
-                                MPI_Recv(&uc_nd1a_l, 1, MPI_DOUBLE, myRank-1, recv_tag, MPI_COMM_WORLD, &status);
-                                uc(i-1) = uc_nd1a_l;
-                                un(i) = uc(i) + rx*( uc(i+1) - 2.*uc(i) + uc(i-1)) + dt*FORCE( x(i),t );
-                            }
-                        }
-                        
-                    }
-                    else if (side == 1) // right side boundary
-                    {
-                        // first odd ranks will send the value at n1a_l for even rank's right side value evaluation
-                        if (myRank%2 == 1)
-                        {   // odd rank will send the right side value
-                            int send_tag = 100 * myRank + 0; // send tag for the left side value
-                            MPI_Send(&uc(n1a_l), 1, MPI_DOUBLE, myRank-1, send_tag, MPI_COMM_WORLD);
-                        }
-                        else 
-                        {
-                            int recv_tag = 100 * (myRank+1) + 0;
-                            MPI_Status status;
-                            Real uc_nd1b_l = 0.;
-                            if (myRank != (np-1)) // np-1 th rank should not evalutate the right side bc as parallel ghost bc
-                            {
-                                MPI_Recv(&uc_nd1b_l, 1, MPI_DOUBLE, myRank+1, recv_tag, MPI_COMM_WORLD, &status);
-                                uc(i+1) = uc_nd1b_l;
-                                un(i) = uc(i) + rx*( uc(i+1) - 2.*uc(i) + uc(i-1)) + dt*FORCE( x(i),t );
-                            }
-                        }
-
-                        // now, even ranks will send the left side value to the previous (odd) ranks
-                        if (myRank%2 == 0)
-                        {
-                            // odd rank will send the right side value
-                            int send_tag = 100 * myRank + 0; // send tag for the left side value
-                            if (myRank != 0)
-                                MPI_Send(&uc(n1a_l), 1, MPI_DOUBLE, myRank-1, send_tag, MPI_COMM_WORLD);
-                        }
-                        else
-                        {
-                            int recv_tag = 100 * (myRank+1) + 0;
-                            MPI_Status status;
-                            Real uc_nd1b_l = 0.;
-                            if (myRank != (np-1)) // np-1 th rank should not evalutate the right side bc as parallel ghost bc
-                            {
-                                MPI_Recv(&uc_nd1b_l, 1, MPI_DOUBLE, myRank+1, recv_tag, MPI_COMM_WORLD, &status);
-                                uc(i+1) = uc_nd1b_l;
-                                un(i) = uc(i) + rx*( uc(i+1) - 2.*uc(i) + uc(i-1)) + dt*FORCE( x(i),t );
-                            }
+                            un(i) = uc(i) + rx*( uc(i+1) - 2.*uc(i) + uc(i-1)) + dt*FORCE( x(i),t );
                         }
                     }
-                } 
-                else if (commOption == 1) // non-BlockedSendRecv
+                    
+                    // MPI_Barrier(MPI_COMM_WORLD);
+                }
+                else if (side == 1) // right side boundary
                 {
-                    if (side == 0) // left side boundary
-                    {
-                        MPI_Request request[2]; 
-                        MPI_Status status[2];
-                        int num_request = 0;
-
-                        Real uc_nd1a_l = 0.;
-
-                        int send_tag = 100 * myRank + 1; // send tag for the right side point 
-                        int recv_tag = 100 * (myRank-1) + 1; // recv tag
-
-                        if (myRank != 0){
-                            MPI_Irecv(&uc_nd1a_l, 1, MPI_DOUBLE, myRank-1, recv_tag, MPI_COMM_WORLD, &request[num_request]);
-                            num_request += 1;
-                        }
-                        
-                        if (myRank != (np-1)){
-                            MPI_Isend(&uc(n1b_l), 1, MPI_DOUBLE, myRank+1, send_tag, MPI_COMM_WORLD, &request[num_request]);
-                            num_request += 1;
-                        }
-
-                        MPI_Waitall(num_request, request, status);
-
-                        if (myRank != 0){
-                            uc(i-1) = uc_nd1a_l;
-                            un(i) = uc(i) + rx*( uc(i+1) - 2.*uc(i) + uc(i-1) ) + dt*FORCE( x(i),t );
-                        }
-
+                    // first odd ranks will send the value at n1a_l for even rank's right side value evaluation
+                    if (myRank%2 == 1)
+                    {   // odd rank will send the right side value
+                        int send_tag = 100 * myRank + 0; // send tag for the left side value
+                        MPI_Send(&uc(n1a_l), 1, MPI_DOUBLE, myRank-1, send_tag, MPI_COMM_WORLD);
                     }
-                    else if (side == 1) // right side boundary
+                    else 
                     {
-                        MPI_Request request[2]; 
-                        MPI_Status status[2];
-                        int num_request = 0;
-
+                        int recv_tag = 100 * (myRank+1) + 0;
+                        MPI_Status status;
                         Real uc_nd1b_l = 0.;
-
-                        int send_tag = 100 * myRank + 0; // send tag for the right side point 
-                        int recv_tag = 100 * (myRank+1) + 0; // recv tag
-
-                        if(myRank != (np-1)){
-                            MPI_Irecv(&uc_nd1b_l, 1, MPI_DOUBLE, myRank+1, recv_tag, MPI_COMM_WORLD, &request[num_request]);
-                            num_request += 1;
-                        }
-
-                        if (myRank != 0){
-                            MPI_Isend(&uc(n1a_l), 1, MPI_DOUBLE, myRank-1, send_tag, MPI_COMM_WORLD, &request[num_request]);
-                            num_request += 1;
-                        }
-
-                        MPI_Waitall(num_request, request, status);
-
-                        if (myRank != (np-1)){
+                        if (myRank != (np-1)) // np-1 th rank should not evalutate the right side bc as parallel ghost bc
+                        {
+                            MPI_Recv(&uc_nd1b_l, 1, MPI_DOUBLE, myRank+1, recv_tag, MPI_COMM_WORLD, &status);
                             uc(i+1) = uc_nd1b_l;
                             un(i) = uc(i) + rx*( uc(i+1) - 2.*uc(i) + uc(i-1)) + dt*FORCE( x(i),t );
                         }
                     }
+                    // MPI_Barrier(MPI_COMM_WORLD);
+
+                    // now, even ranks will send the left side value to the previous (odd) ranks
+                    if (myRank%2 == 0)
+                    {
+                        // odd rank will send the right side value
+                        int send_tag = 100 * myRank + 0; // send tag for the left side value
+                        MPI_Send(&uc(n1a_l), 1, MPI_DOUBLE, myRank-1, send_tag, MPI_COMM_WORLD);
+                    }
+                    else
+                    {
+                        int recv_tag = 100 * (myRank+1) + 0;
+                        MPI_Status status;
+                        Real uc_nd1b_l = 0.;
+                        if (myRank != (np-1)) // np-1 th rank should not evalutate the right side bc as parallel ghost bc
+                        {
+                            MPI_Recv(&uc_nd1b_l, 1, MPI_DOUBLE, myRank+1, recv_tag, MPI_COMM_WORLD, &status);
+                            uc(i+1) = uc_nd1b_l;
+                            un(i) = uc(i) + rx*( uc(i+1) - 2.*uc(i) + uc(i-1)) + dt*FORCE( x(i),t );
+                        }
+                    }
+                    // MPI_Barrier(MPI_COMM_WORLD);
                 }
-                
             }
         }
 
@@ -623,6 +500,7 @@ int main( int argc, char* argv[] )
         maxErr_local = max( maxErr_local, abs(error(i)) );
     }
     MPI_Reduce(&maxErr_local, &maxErr, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+
 
     if (debug > 0){
             char variablename[80];
