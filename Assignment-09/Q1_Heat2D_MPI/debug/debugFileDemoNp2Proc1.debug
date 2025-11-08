@@ -1,0 +1,10 @@
+------------------- DebugFileDemo --------------------- 
+ np=2, myRank=1, option=2
+----- Solve the Heat Equation in two dimensions ------
+      option=2 : cIndexing      	      Polynomial-Manufactured
+      saveMatlab=2, matlabFileName=heat2d.m 
+   kappa=0.1, nx=16, ny=16, tFinal=  0.10, kx=2, ky=3
+myRank= 1: nx= 16, nx_l= 16, [n1a_l,n1b_l]=[    0,    16], [nd1a_l,nd1b_l]=[    -1,    17] 
+
+myRank= 1: ny= 16, ny_l= 7, [n2a_l,n2b_l]=[    9,    16], [nd2a_l,nd2b_l]=[    8,    17] 
+
