@@ -27,9 +27,7 @@ void add(int* a_d, int *b_d, int *c_d, int N)
   {
     c_d[i] = a_d[i] + b_d[i]; 
   }
-
-  // syncronize the threads. 
-  __syncthreads();
+  
 }
 
 
@@ -73,6 +71,8 @@ int main(int argc, char* argv[])
   // printf("  Nb  \t  Nt  \t  Nb*Nt  \t  n  \t  maxErr  \t  GPU(ms)  \t  speedup\n");
   printf("%-10s %-10s %-12s %-12s %-12s %-12s %-12s\n",
            "Nb", "Nt", "Nb*Nt", "n", "maxErr", "GPU(ms)", "speedup");
+  // printf("%-10s & %-10s & %-12s & %-12s & %-12s & %-12s & %-12s\n",
+  //          "Nb", "Nt", "Nb*Nt", "n", "maxErr", "GPU(ms)", "speedup");
 
   // create the cuda event for time 
   cudaEvent_t start, stop;
@@ -106,7 +106,9 @@ int main(int argc, char* argv[])
     // printf("  %d  \t  %d  \t  %d  \t  %d  \t  %d  \t  %12.4e  \t  %12.4e\n", 
     //        Nb, Nt, Nb*Nt, n, maxErr, gpu_time, speedup);
     printf("%-10d %-10d %-12d %-12d %-12d %-12.4g %-12.4g\n",
-            Nb, Nt, Nb*Nt, n, maxErr, gpu_time, speedup);
+           Nb, Nt, Nb*Nt, n, maxErr, gpu_time, speedup);
+    // printf("\\ %-10d & %-10d & %-12d & %-12d & %-12d & %-12.4g & %-12.4g\n",
+    //         Nb, Nt, Nb*Nt, n, maxErr, gpu_time, speedup);
         
   }
 
