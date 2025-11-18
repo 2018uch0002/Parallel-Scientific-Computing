@@ -4,3 +4,7 @@ Assignment-03/heat1d_code/heat1dImp
 Assignment-04/heat2d_code_q1/heat2d
 Assignment-04/heat2d_code_q2/heatADI
 Assignment-10/Q02_cuda_add/add
+Assignment-11/q1_heat1d/*.o
+Assignment-11/q1_heat1d/./heat1d
+Assignment-11/q1_heat2d/*.o
+Assignment-11/q1_heat2d/./heat2d
