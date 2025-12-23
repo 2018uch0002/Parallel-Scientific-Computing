@@ -1,0 +1,13 @@
+#all: build run
+all: build
+
+build:
+	mpic++ -O3 simulation.C -o simulation.o
+	nvcc -O3 -arch=sm_70 simulation.cu -c -o simulation_cuda.o
+	mpicc simulation.o simulation_cuda.o -o monte_carlo -L/usr/local/cuda-11.2/lib64 -lcurand -lcudadevrt -lcudart -lstdc++ 
+
+#run:
+#	mpiexec -np 4 ./monte_carlo
+#
+#clean:
+#	rm -f *.o simulation
