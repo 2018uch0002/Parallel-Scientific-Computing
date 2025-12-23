@@ -3,20 +3,20 @@
 *.m
 *.pdf
 
-Assignment-02/part-a/./a
-Assignment-02/part-a/./heat1d
-Assignment-02/part-b/./b
-Assignment-02/part-b/./b_DD
-Assignment-02/part-b/./b_nn
-Assignment-02/part-c/./c
-Assignment-02/part-d/./d_DD
-Assignment-02/part-d/./d_NN
+Assignment-02/part-a/a
+Assignment-02/part-a/heat1d
+Assignment-02/part-b/b
+Assignment-02/part-b/b_DD
+Assignment-02/part-b/b_nn
+Assignment-02/part-c/c
+Assignment-02/part-d/d_DD
+Assignment-02/part-d/d_NN
 
-Assignment-03/Q_01/./heat1d
-Assignment-03/Q_01/./RK
-Assignment-03/Q_02/part_2b/./heat1dImp
-Assignment-03/Q_02/part_2d/./heat1dImp
-Assignment-03/heat1d_code/./heat1dImp
+Assignment-03/Q_01/heat1d
+Assignment-03/Q_01/RK
+Assignment-03/Q_02/part_2b/heat1dImp
+Assignment-03/Q_02/part_2d/heat1dImp
+Assignment-03/heat1d_code/heat1dImp
 
 Assignment-04/heat2d_code_q1/heat2d
 Assignment-04/heat2d_code_q2/heatADI
@@ -24,6 +24,6 @@ Assignment-04/heat2d_code_q2/heatADI
 Assignment-10/Q02_cuda_add/add
 
 Assignment-11/q1_heat1d/*.o
-Assignment-11/q1_heat1d/./heat1d
+Assignment-11/q1_heat1d/heat1d
 Assignment-11/q2_heat2d/*.o
-Assignment-11/q2_heat2d/./heat2d
+Assignment-11/q2_heat2d/heat2d
